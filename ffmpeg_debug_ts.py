@@ -38,14 +38,14 @@ def ffmpeg_log_analyse( flog ):
     import re
     demuxExp = r"ist_index:(?P<streamid>\d+)\s+"
     demuxExp += r"type:(?P<type>(audio|video))\s+"
-    demuxExp += r"next_dts:(?P<next_dts>\d+)\s+"
-    demuxExp += r"next_dts_time:(?P<next_dts_time>[.\d]+)\s+"
-    demuxExp += r"next_pts:(?P<next_pts>\d+)\s+"
-    demuxExp += r"next_pts_time:(?P<next_pts_time>[.\d]+)\s+"
-    demuxExp += r"pkt_pts:(?P<pkt_pts>\d+)\s+"
-    demuxExp += r"pkt_pts_time:(?P<pkt_pts_time>[.\d]+)\s+"
-    demuxExp += r"pkt_dts:(?P<pkt_dts>\d+)\s+"
-    demuxExp += r"pkt_dts_time:(?P<pkt_dts_time>[.\d]+)\s+"
+    demuxExp += r"next_dts:(\d+)\s+"
+    demuxExp += r"next_dts_time:(?P<next_dts>[.\d]+)\s+"
+    demuxExp += r"next_pts:(\d+)\s+"
+    demuxExp += r"next_pts_time:(?P<next_pts>[.\d]+)\s+"
+    demuxExp += r"pkt_pts:(\d+)\s+"
+    demuxExp += r"pkt_pts_time:(?P<pkt_pts>[.\d]+)\s+"
+    demuxExp += r"pkt_dts:(\d+)\s+"
+    demuxExp += r"pkt_dts_time:(?P<pkt_dts>[.\d]+)\s+"
     demuxObj = re.compile( demuxExp )
     figData  = {}
     print "ffmpeg_log_analyse()..."
@@ -84,8 +84,6 @@ def ffmpeg_log_draw( opt, figData ):
         ax.set_ylabel( "ts inc" )
         
         for j, tsName in enumerate( stream ):
-            if tsName[-4:] != "time":
-                continue
             tsList = stream[tsName]
             tsCurr = np.array(tsList[0:len(tsList)-1])
             tsNext = np.array(tsList[1:len(tsList)])
