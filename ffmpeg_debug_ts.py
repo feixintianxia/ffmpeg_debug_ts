@@ -90,6 +90,8 @@ def ffmpeg_log_draw( opt, figData ):
             ax.set_xlim(right = float(opt.end) )
             
         for j, tsName in enumerate( stream ):
+            if opt.select and tsName not in opt.select:
+                continue
             tsList = stream[tsName]
             tsCurr = np.array(tsList[0:len(tsList)-1])
             tsNext = np.array(tsList[1:len(tsList)])
@@ -131,12 +133,16 @@ def opt_define():
                       help="end time")
     parser.add_option("-d", "--decoder", dest="decoder",
                       default="ffmpeg",
-                      help="Decoder type: ffmpeg or ffprobe")
+                      help="Decoder type: ffmpeg or ffprobe. [%default]")
     parser.add_option("-t", "--threshold", dest="threshold",
                       default=1,
                       help="Time inc above the threshold will trigger error report.")
     parser.add_option("-c", "--compress", dest="comp",
-                      help="Method for compress time inc. In case time inc out of range.")
+                      default=0, action = "store_true",
+                      help="Whether use log scaling axises. [%default]")
+    parser.add_option("--select", dest="select",
+                      default=r"pkt_pts,pkt_dts",
+                      help="select time-stamp type for showing. [%default]")
     return parser
 
 def opt_check(opt):
@@ -149,6 +155,13 @@ def opt_check(opt):
         print "Warning: " + opt.log + " already exist."
     if not opt.out:
         opt.out = opt.log + ".png"
+    if opt.select:
+        opt.select = opt.select.split(",")
+        fullset = ["pkt_pts", "pkt_dts", "next_pts", "next_dts"]
+        exset = [i for i in opt.select if i not in fullset]
+        if exset:
+            print "Error: --select (", exset, ") out of", fullset
+            exit(1)
     return 0
 
 
