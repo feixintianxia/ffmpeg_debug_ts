@@ -60,7 +60,9 @@ def ffmpeg_log_analyse( flog ):
                     ''' insert stream '''
                     figData[streamid] = {k:[] for k in frame_ts.keys()}
                 for k, v in frame_ts.iteritems():
-                    figData[streamid][k].append( float(v) )
+                    f = float(v)
+                    if f > float(opt.start) and f < float(opt.end):
+                        figData[streamid][k].append( float(v) )
         #end for line
     #end with open()
     return figData
@@ -82,7 +84,11 @@ def ffmpeg_log_draw( opt, figData ):
         ax.set_title( "stream:" + sid )
         ax.set_xlabel( "ts" )
         ax.set_ylabel( "ts inc" )
-        
+        if float(opt.start) > float(-sys.float_info.max):
+            ax.set_xlim(left = float(opt.start) )
+        if float(opt.end) < float(sys.float_info.max):
+            ax.set_xlim(right = float(opt.end) )
+            
         for j, tsName in enumerate( stream ):
             tsList = stream[tsName]
             tsCurr = np.array(tsList[0:len(tsList)-1])
@@ -108,6 +114,7 @@ def ffprobe_log_analyse( flog ):
 #end def
 
 def opt_define():
+    import sys
     from optparse import OptionParser
     parser = OptionParser()
     parser.add_option("-i", "--input", dest="input",
@@ -117,9 +124,11 @@ def opt_define():
     parser.add_option("-o", "--out", dest="out",
                       help=r"Name for saved picture.")
     parser.add_option("-s", "--start", dest="start",
+                      default=float(-sys.float_info.max),
                       help="start time")
-    parser.add_option("-e", "--duration", dest="duration",
-                      help="duration")
+    parser.add_option("-e", "--end", dest="end",
+                      default=float(sys.float_info.max),
+                      help="end time")
     parser.add_option("-d", "--decoder", dest="decoder",
                       default="ffmpeg",
                       help="Decoder type: ffmpeg or ffprobe")
