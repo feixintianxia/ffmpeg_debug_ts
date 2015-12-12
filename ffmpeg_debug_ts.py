@@ -74,20 +74,25 @@ def ffmpeg_log_draw( opt, figData ):
     figTitle = opt.out
     streams = figData.keys()
     
-    nSubPlot = len( streams )
-    fig = plt.figure( figTitle, figsize = (12, nSubPlot*3) )
-    gs  = gridspec.GridSpec( nSubPlot, 1 )
+    nStreams = len( streams )
+    fig = plt.figure( figTitle, figsize = (9*2, nStreams*3) )
+    gs  = gridspec.GridSpec( nStreams, 2 )
     
     for i, sid in enumerate( streams ):
         stream = figData[sid]
-        ax = fig.add_subplot( gs[i] )
-        ax.set_title( "stream:" + sid )
-        ax.set_xlabel( "ts" )
-        ax.set_ylabel( "ts inc" )
+        axInc = fig.add_subplot( gs[i, 0] )
+        axInc.set_title( "stream:" + sid + " ts_inc" )
+        axInc.set_xlabel( "ts" )
+        axInc.set_ylabel( "ts inc" )
         if float(opt.start) > float(-sys.float_info.max):
-            ax.set_xlim(left = float(opt.start) )
+            axInc.set_xlim(left = float(opt.start) )
         if float(opt.end) < float(sys.float_info.max):
-            ax.set_xlim(right = float(opt.end) )
+            axInc.set_xlim(right = float(opt.end) )
+        
+        axTs = fig.add_subplot( gs[i, 1] )
+        axTs.set_title( "stream:" + sid )
+        axTs.set_xlabel( "order" )
+        axTs.set_ylabel( "ts" )
             
         for j, tsName in enumerate( stream ):
             if opt.select and tsName not in opt.select:
@@ -99,12 +104,18 @@ def ffmpeg_log_draw( opt, figData ):
             
             tsLable = "stream-" + sid + ":" + tsName
             if opt.comp:
-                ax.loglog( tsCurr, tsInc, '-', label = tsLable )
+                axTs.semilogy( tsCurr, '-*', label = tsLable )
+                axInc.loglog( tsCurr, tsInc, '-*', label = tsLable )
             else:
-                ax.plot( tsCurr, tsInc, '-', label = tsLable )
-            
-            ax.legend( fontsize = 10, loc = 0 )
-            ax.grid( True )
+                axTs.plot( tsCurr, '-*', label = tsLable )
+                axInc.plot( tsCurr, tsInc, '-*', label = tsLable )
+                
+            for i, jump in enumerate( tsInc ):
+                if (jump>opt.threshold or jump < 0):
+                    print "stream{:s}.{:s} has large inc {:f} at {:f}".format( sid, tsName, jump, tsCurr[i] )
+                    
+        axInc.legend( fontsize = 10, loc = 0 )
+        axInc.grid( True )
     fig.tight_layout()
     fig.savefig( figTitle )
     #plt.close( fig )
