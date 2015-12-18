@@ -103,8 +103,8 @@ def ffmpeg_log_draw( opt, figData ):
             tsInc  = tsNext - tsCurr
             
             tsLable = "stream-" + sid + ":" + tsName
-            if opt.comp:
-                axPkt.semilogy( tsCurr, range(1,len(tsList)), '-+', label = tsLable )
+            if opt.log_ax:
+                axPkt.loglog( tsCurr, range(1,len(tsList)), '-+', label = tsLable )
                 axInc.loglog( tsCurr, tsInc, '-*', label = tsLable )
             else:
                 axPkt.plot( tsCurr, range(1,len(tsList)), '-+', label = tsLable )
@@ -112,7 +112,7 @@ def ffmpeg_log_draw( opt, figData ):
                 
             for i, jump in enumerate( tsInc ):
                 if (jump>opt.threshold or jump < -0.1):
-                    print "stream{:s}.{:s} has large inc {:f} at {:f}".format( sid, tsName, jump, tsCurr[i] )
+                    print "stream-{:s}.{:s} has large inc {:f} at {:f}".format( sid, tsName, jump, tsCurr[i] )
                     
         axInc.legend( fontsize = 10, loc = 0 )
         axInc.grid( True )
@@ -148,7 +148,7 @@ def opt_define():
     parser.add_option("-t", "--threshold", dest="threshold",
                       default=1,
                       help="Time inc above the threshold will trigger error report.")
-    parser.add_option("-c", "--compress", dest="comp",
+    parser.add_option("-c", "--compress", dest="log_ax",
                       default=0, action = "store_true",
                       help="Whether use log scaling axises. [%default]")
     parser.add_option("-k", "--select", dest="select",
