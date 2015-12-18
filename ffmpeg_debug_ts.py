@@ -54,8 +54,8 @@ def ffmpeg_log_analyse( flog ):
             demuxMatch = demuxObj.search( line )
             if demuxMatch:
                 frame_ts = demuxMatch.groupdict()
-                type = frame_ts.pop( 'type' )
-                streamid = frame_ts.pop( 'streamid' )
+                streamid = frame_ts.pop( 'streamid' ) 
+                streamid += "(" + frame_ts.pop( 'type' ) + ")"
                 if streamid not in figData:
                     ''' insert stream '''
                     figData[streamid] = {k:[] for k in frame_ts.keys()}
@@ -81,7 +81,7 @@ def ffmpeg_log_draw( opt, figData ):
     for i, sid in enumerate( streams ):
         stream = figData[sid]
         axInc = fig.add_subplot( gs[i, 0] )
-        axInc.set_title( "stream:" + sid + " ts_inc" )
+        axInc.set_title( "stream-" + sid + " ts_inc" )
         axInc.set_xlabel( "ts" )
         axInc.set_ylabel( "ts inc" )
         if float(opt.start) > float(-sys.float_info.max):
@@ -89,10 +89,10 @@ def ffmpeg_log_draw( opt, figData ):
         if float(opt.end) < float(sys.float_info.max):
             axInc.set_xlim(right = float(opt.end) )
         
-        axTs = fig.add_subplot( gs[i, 1] )
-        axTs.set_title( "stream:" + sid )
-        axTs.set_xlabel( "order" )
-        axTs.set_ylabel( "ts" )
+        axPkt = fig.add_subplot( gs[i, 1] )
+        axPkt.set_title( "stream-" + sid + " n-pkt" )
+        axPkt.set_xlabel( "ts" )
+        axPkt.set_ylabel( "n-pkt" )
             
         for j, tsName in enumerate( stream ):
             if opt.select and tsName not in opt.select:
@@ -104,14 +104,14 @@ def ffmpeg_log_draw( opt, figData ):
             
             tsLable = "stream-" + sid + ":" + tsName
             if opt.comp:
-                axTs.semilogy( tsCurr, '-*', label = tsLable )
+                axPkt.semilogy( tsCurr, range(1,len(tsList)), '-+', label = tsLable )
                 axInc.loglog( tsCurr, tsInc, '-*', label = tsLable )
             else:
-                axTs.plot( tsCurr, '-*', label = tsLable )
+                axPkt.plot( tsCurr, range(1,len(tsList)), '-+', label = tsLable )
                 axInc.plot( tsCurr, tsInc, '-*', label = tsLable )
                 
             for i, jump in enumerate( tsInc ):
-                if (jump>opt.threshold or jump < 0):
+                if (jump>opt.threshold or jump < -0.1):
                     print "stream{:s}.{:s} has large inc {:f} at {:f}".format( sid, tsName, jump, tsCurr[i] )
                     
         axInc.legend( fontsize = 10, loc = 0 )
@@ -151,7 +151,7 @@ def opt_define():
     parser.add_option("-c", "--compress", dest="comp",
                       default=0, action = "store_true",
                       help="Whether use log scaling axises. [%default]")
-    parser.add_option("--select", dest="select",
+    parser.add_option("-k", "--select", dest="select",
                       default=r"pkt_pts,pkt_dts",
                       help="select time-stamp type for showing. [%default]")
     return parser
