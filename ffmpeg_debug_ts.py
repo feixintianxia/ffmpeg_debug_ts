@@ -22,6 +22,8 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import numpy as np
 
+fullset = ["pkt_pts", "pkt_dts", "next_pts", "next_dts"]
+
 '''
 demuxer -> ist_index:1 type:audio next_dts:2194875219 next_dts_time:2194.88 next_pts:2194875219 next_pts_time:2194.88 pkt_pts:2194853 pkt_pts_time:2194.85 pkt_dts:2194853 pkt_dts_time:2194.85 off:0 off_time:0
 
@@ -75,7 +77,7 @@ def ffmpeg_log_draw( opt, figData ):
     streams = figData.keys()
     
     nStreams = len( streams )
-    fig = plt.figure( figTitle, figsize = (9*2, nStreams*3) )
+    fig = plt.figure( figTitle, figsize = (8*2, nStreams*3) )
     gs  = gridspec.GridSpec( nStreams, 2 )
     
     for i, sid in enumerate( streams ):
@@ -90,9 +92,14 @@ def ffmpeg_log_draw( opt, figData ):
             axInc.set_xlim(right = float(opt.end) )
         
         axPkt = fig.add_subplot( gs[i, 1] )
-        axPkt.set_title( "stream-" + sid + " n-pkt" )
-        axPkt.set_xlabel( "ts" )
-        axPkt.set_ylabel( "n-pkt" )
+        if opt.pkt_ts:
+            axPkt.set_title( "stream-" + sid + " pkt-ts" )
+            axPkt.set_xlabel( "pkt_order" )
+            axPkt.set_ylabel( "ts" )
+        else:
+            axPkt.set_title( "stream-" + sid + " ts-pkt" )
+            axPkt.set_xlabel( "ts" )
+            axPkt.set_ylabel( "n-pkt" )
             
         for j, tsName in enumerate( stream ):
             if opt.select and tsName not in opt.select:
@@ -104,20 +111,27 @@ def ffmpeg_log_draw( opt, figData ):
             
             tsLable = "stream-" + sid + ":" + tsName
             if opt.log_ax:
-                axPkt.loglog( tsCurr, range(1,len(tsList)), '-+', label = tsLable )
                 axInc.loglog( tsCurr, tsInc, '-*', label = tsLable )
+                if opt.pkt_ts:
+                    axPkt.semilogy( tsList, '-*', label = tsLable )
+                else:
+                    axPkt.loglog( tsCurr, range(1,len(tsList)), '-+', label = tsLable )
             else:
-                axPkt.plot( tsCurr, range(1,len(tsList)), '-+', label = tsLable )
                 axInc.plot( tsCurr, tsInc, '-*', label = tsLable )
+                if opt.pkt_ts:
+                    axPkt.plot( tsList, '-*', label = tsLable )
+                else:
+                    axPkt.plot( tsCurr, range(1,len(tsList)), '-+', label = tsLable )
                 
             for i, jump in enumerate( tsInc ):
-                if (jump>opt.threshold or jump < -0.1):
+                if (jump>opt.threshold or jump < -1):
                     print "stream-{:s}.{:s} has large inc {:f} at {:f}".format( sid, tsName, jump, tsCurr[i] )
+            sys.stdout.flush()
                     
         axInc.legend( fontsize = 10, loc = 0 )
         axInc.grid( True )
-    fig.tight_layout()
-    fig.savefig( figTitle )
+    #fig.tight_layout()
+    #fig.savefig( figTitle )
     #plt.close( fig )
     plt.show( fig )
     #end for tsName, tsList in figData.iteritems()
@@ -152,8 +166,14 @@ def opt_define():
                       default=0, action = "store_true",
                       help="Whether use log scaling axises. [%default]")
     parser.add_option("-k", "--select", dest="select",
-                      default=r"pkt_pts,pkt_dts",
-                      help="select time-stamp type for showing. [%default]")
+                      default=r"pkt_dts",
+                      help="Select timestamp type in " + str(fullset) + " for showing. [%default]")
+    parser.add_option("--pkt-ts", dest="pkt_ts",
+                      default=1, action = "store_true",
+                      help="show pkt-ts other than ts-pkt")
+    parser.add_option("--ts-pkt", dest="pkt_ts",
+                      action = "store_false",
+                      help="show ts-pkt other than pkt-ts")
     return parser
 
 def opt_check(opt):
@@ -168,7 +188,6 @@ def opt_check(opt):
         opt.out = opt.log + ".png"
     if opt.select:
         opt.select = opt.select.split(",")
-        fullset = ["pkt_pts", "pkt_dts", "next_pts", "next_dts"]
         exset = [i for i in opt.select if i not in fullset]
         if exset:
             print "Error: --select (", exset, ") out of", fullset
