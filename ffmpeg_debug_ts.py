@@ -144,7 +144,7 @@ def opt_define():
                       help="end time")
     parser.add_option("-d", "--decoder", dest="decoder",
                       default="ffmpeg",
-                      help="Decoder type: ffmpeg or ffprobe. [%default]")
+                      help="path to ffmpeg. [%default]")
     parser.add_option("-t", "--threshold", dest="threshold",
                       default=1,
                       help="Time inc above the threshold will trigger error report.")
@@ -158,6 +158,8 @@ def opt_define():
 
 def opt_check(opt):
     import sys
+    if not opt.decoder or not os.path.isfile(opt.decoder):
+        sys.exit("Error: Invalid FFMpeg program.")
     if not opt.input and not opt.log:
         sys.exit("Error : No input or log specified")
     if not opt.log:
@@ -186,10 +188,7 @@ if __name__ == "__main__":
       
     if opt.input:
         cmd = opt.decoder + " -i " + opt.input
-        if opt.decoder == "ffmpeg":
-            cmd += " -debug_ts -c:v copy -c:a copy -f null out.null >"
-        else:
-            cmd += " -show_frames -of xml >"
+        cmd += " -debug_ts -c:v copy -c:a copy -f null out.null >"
         cmd += opt.log + " 2>&1"
         print "excute[ " + cmd + " ]"
         
