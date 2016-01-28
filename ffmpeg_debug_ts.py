@@ -132,6 +132,8 @@ def opt_define():
     parser = OptionParser()
     parser.add_option("-i", "--input", dest="input",
                       help=r"movie to be analyzed")
+    parser.add_option("-u", "--url", dest="url",
+                      help=r"live stream to be analyzed")
     parser.add_option("-l", "--log", dest="log",
                       help="log to be analyzed if you don't specify movie")
     parser.add_option("-o", "--out", dest="out",
@@ -160,10 +162,13 @@ def opt_check(opt):
     import sys
     if not opt.decoder or not os.path.isfile(opt.decoder):
         sys.exit("Error: Invalid FFMpeg program.")
-    if not opt.input and not opt.log:
-        sys.exit("Error : No input or log specified")
+    if not opt.input and not opt.url and not opt.log:
+        sys.exit("Error: No input/url or log specified.")
     if not opt.log:
-        opt.log = opt.input + "." + opt.decoder + ".log"
+        if opt.input:
+            opt.log = opt.input + "." + opt.decoder + ".log"
+        else:
+            opt.log = "timestamp.log"
     if os.path.isfile(opt.log):
         print "Warning: " + opt.log + " already exist."
     if not opt.out:
