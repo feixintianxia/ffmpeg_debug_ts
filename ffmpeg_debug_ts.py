@@ -131,7 +131,7 @@ def ffmpeg_log_draw( opt, figData ):
         axInc.legend( fontsize = 10, loc = 0 )
         axInc.grid( True )
     #fig.tight_layout()
-    #fig.savefig( figTitle )
+    fig.savefig( figTitle )
     #plt.close( fig )
     plt.show( fig )
     #end for tsName, tsList in figData.iteritems()
@@ -146,6 +146,8 @@ def opt_define():
     parser = OptionParser()
     parser.add_option("-i", "--input", dest="input",
                       help=r"movie to be analyzed")
+    parser.add_option("-u", "--url", dest="url",
+                      help=r"live stream to be analyzed")
     parser.add_option("-l", "--log", dest="log",
                       help="log to be analyzed if you don't specify movie")
     parser.add_option("-o", "--out", dest="out",
@@ -158,7 +160,7 @@ def opt_define():
                       help="end time")
     parser.add_option("-d", "--decoder", dest="decoder",
                       default="ffmpeg",
-                      help="Decoder type: ffmpeg or ffprobe. [%default]")
+                      help="path to ffmpeg. [%default]")
     parser.add_option("-t", "--threshold", dest="threshold",
                       default=1,
                       help="Time inc above the threshold will trigger error report.")
@@ -178,10 +180,15 @@ def opt_define():
 
 def opt_check(opt):
     import sys
-    if not opt.input and not opt.log:
-        sys.exit("Error : No input or log specified")
+    if not opt.decoder or not os.path.isfile(opt.decoder):
+        sys.exit("Error: Invalid FFMpeg program.")
+    if not opt.input and not opt.url and not opt.log:
+        sys.exit("Error: No input/url or log specified.")
     if not opt.log:
-        opt.log = opt.input + "." + opt.decoder + ".log"
+        if opt.input:
+            opt.log = opt.input + "." + opt.decoder + ".log"
+        else:
+            opt.log = "timestamp.log"
     if os.path.isfile(opt.log):
         print "Warning: " + opt.log + " already exist."
     if not opt.out:
@@ -205,10 +212,7 @@ if __name__ == "__main__":
       
     if opt.input:
         cmd = opt.decoder + " -i " + opt.input
-        if opt.decoder == "ffmpeg":
-            cmd += " -debug_ts -c:v copy -c:a copy -f null out.null >"
-        else:
-            cmd += " -show_frames -of xml >"
+        cmd += " -debug_ts -c:v copy -c:a copy -f null out.null >"
         cmd += opt.log + " 2>&1"
         print "excute[ " + cmd + " ]"
         
