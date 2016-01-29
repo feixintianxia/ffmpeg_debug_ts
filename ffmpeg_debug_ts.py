@@ -171,7 +171,7 @@ def opt_define():
                       default=r"pkt_dts",
                       help="Select timestamp type in " + str(fullset) + " for showing. [%default]")
     parser.add_option("--pkt-ts", dest="pkt_ts",
-                      default=1, action = "store_true",
+                      default=0, action = "store_true",
                       help="show pkt-ts other than ts-pkt")
     parser.add_option("--ts-pkt", dest="pkt_ts",
                       action = "store_false",
@@ -180,7 +180,7 @@ def opt_define():
 
 def opt_check(opt):
     import sys
-    if not opt.decoder or not os.path.isfile(opt.decoder):
+    if not opt.decoder or os.system(opt.decoder+" -version"):
         sys.exit("Error: Invalid FFMpeg program.")
     if not opt.input and not opt.url and not opt.log:
         sys.exit("Error: No input/url or log specified.")
