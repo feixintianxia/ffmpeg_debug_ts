@@ -186,7 +186,7 @@ def opt_check(opt):
         sys.exit("Error: No input/url or log specified.")
     if not opt.log:
         if opt.input:
-            opt.log = opt.input + "." + opt.decoder + ".log"
+            opt.log = opt.input + ".ffmpeg.log"
         else:
             opt.log = "timestamp.log"
     if os.path.isfile(opt.log):
@@ -221,12 +221,6 @@ if __name__ == "__main__":
             sys.exit("Decoding failed !!!")
    
     figData = {}
-    if opt.decoder == "ffmpeg":
-        figData = ffmpeg_log_analyse( opt.log )
-        #figData = ffmpeg_log_process( opt, figData )
-        ffmpeg_log_draw( opt, figData )
-    '''
-    else:
-        figData = ffprobe_log_analyse( opt.log )
-    '''
+    figData = ffmpeg_log_analyse( opt.log )
+    ffmpeg_log_draw( opt, figData )
     exit(0)
