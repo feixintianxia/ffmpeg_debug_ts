@@ -131,9 +131,11 @@ def ffmpeg_log_draw( opt, figData ):
         axInc.legend( fontsize = 10, loc = 0 )
         axInc.grid( True )
     #fig.tight_layout()
-    fig.savefig( figTitle )
+    if not opt.no_save:
+        fig.savefig( figTitle )
     #plt.close( fig )
-    plt.show( fig )
+    if not opt.no_show:
+        plt.show( fig )
     #end for tsName, tsList in figData.iteritems()
 
 def ffprobe_log_analyse( flog ):
@@ -176,6 +178,12 @@ def opt_define():
     parser.add_option("--ts-pkt", dest="pkt_ts",
                       action = "store_false",
                       help="show ts-pkt other than pkt-ts")
+    parser.add_option("--no-show", dest="no_show",
+                      default=0, action = "store_true",
+                      help="Don't show matplot window")
+    parser.add_option("--no-save", dest="no_save",
+                      default=0, action = "store_true",
+                      help="Don't save picture")
     return parser
 
 def opt_check(opt):
