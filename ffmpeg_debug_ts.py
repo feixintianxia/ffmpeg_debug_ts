@@ -100,6 +100,10 @@ def ffmpeg_log_draw( opt, figData ):
             axPkt.set_title( "stream-" + sid + " ts-pkt" )
             axPkt.set_xlabel( "ts" )
             axPkt.set_ylabel( "n-pkt" )
+            if float(opt.start) > float(-sys.float_info.max):
+                axPkt.set_xlim(left = float(opt.start) )
+            if float(opt.end) < float(sys.float_info.max):
+                axPkt.set_xlim(right = float(opt.end) )
             
         for j, tsName in enumerate( stream ):
             if opt.select and tsName not in opt.select:
